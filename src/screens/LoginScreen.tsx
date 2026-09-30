@@ -1,5 +1,6 @@
 import { FormEvent, useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
+import { Eye, EyeOff, Mic } from 'lucide-react';
 import { useSessionStore } from '@/state/sessionStore';
 
 export function LoginScreen() {
@@ -7,6 +8,7 @@ export function LoginScreen() {
   const signIn = useSessionStore((s) => s.signIn);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
 
@@ -18,58 +20,89 @@ export function LoginScreen() {
       await signIn(email, password);
       navigate('/');
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Could not sign in');
+      setError(err instanceof Error ? err.message : 'Could not sign in. Check your credentials.');
     } finally {
       setIsLoading(false);
     }
   };
 
   return (
-    <div className="flex min-h-screen flex-col justify-center px-6">
-      <h1 className="mb-1 text-[26px] font-extrabold">Welcome back</h1>
-      <p className="mb-8 text-[14px] text-white/45">Sign in to pick up where you left off.</p>
-
-      <form onSubmit={handleSubmit} className="space-y-4">
-        <div>
-          <label className="mb-1.5 block text-[12px] font-medium text-white/50">Email</label>
-          <input
-            type="email"
-            required
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            className="focus-ring w-full rounded-2xl border border-white/[0.08] bg-white/[0.03] px-4 py-3 text-[15px] text-white outline-none placeholder:text-white/25"
-            placeholder="you@example.com"
-          />
-        </div>
-        <div>
-          <label className="mb-1.5 block text-[12px] font-medium text-white/50">Password</label>
-          <input
-            type="password"
-            required
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            className="focus-ring w-full rounded-2xl border border-white/[0.08] bg-white/[0.03] px-4 py-3 text-[15px] text-white outline-none placeholder:text-white/25"
-            placeholder="••••••••"
-          />
+    <div className="flex min-h-screen flex-col items-center justify-center bg-ink-900 px-6">
+      <div className="w-full max-w-sm">
+        {/* Logo */}
+        <div className="mb-8 flex flex-col items-center gap-3">
+          <span className="flex h-14 w-14 items-center justify-center rounded-2xl bg-gradient-to-br from-mint-500 to-gold-400 shadow-glow">
+            <Mic size={26} className="text-ink-950" />
+          </span>
+          <div className="text-center">
+            <h1 className="text-[22px] font-extrabold text-white">Sing Musically</h1>
+            <p className="text-[13px] text-white/40">Welcome back</p>
+          </div>
         </div>
 
-        {error && <p className="text-[13px] text-red-400">{error}</p>}
+        <form onSubmit={handleSubmit} className="space-y-4">
+          <div>
+            <label className="mb-1.5 block text-[12px] font-medium text-white/50">Email</label>
+            <input
+              type="email"
+              required
+              autoComplete="email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              className="focus-ring w-full rounded-2xl border border-white/[0.08] bg-white/[0.03] px-4 py-3 text-[15px] text-white outline-none placeholder:text-white/25"
+              placeholder="you@example.com"
+            />
+          </div>
+          <div>
+            <label className="mb-1.5 block text-[12px] font-medium text-white/50">Password</label>
+            <div className="relative">
+              <input
+                type={showPassword ? 'text' : 'password'}
+                required
+                autoComplete="current-password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                className="focus-ring w-full rounded-2xl border border-white/[0.08] bg-white/[0.03] px-4 py-3 pr-11 text-[15px] text-white outline-none placeholder:text-white/25"
+                placeholder="••••••••"
+              />
+              <button
+                type="button"
+                onClick={() => setShowPassword((v) => !v)}
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-white/40 hover:text-white/70"
+                aria-label={showPassword ? 'Hide password' : 'Show password'}
+              >
+                {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
+              </button>
+            </div>
+          </div>
 
-        <button
-          type="submit"
-          disabled={isLoading}
-          className="focus-ring w-full rounded-card bg-mint-500 py-3.5 text-[15px] font-semibold text-ink-950 transition active:scale-[0.98] disabled:opacity-60"
-        >
-          {isLoading ? 'Signing in…' : 'Sign in'}
-        </button>
-      </form>
+          {error && (
+            <p className="rounded-xl border border-red-500/20 bg-red-500/10 px-3 py-2 text-[13px] text-red-300">
+              {error}
+            </p>
+          )}
 
-      <p className="mt-6 text-center text-[13px] text-white/40">
-        New here?{' '}
-        <Link to="/signup" className="font-semibold text-mint-400">
-          Create an account
-        </Link>
-      </p>
+          <button
+            type="submit"
+            disabled={isLoading}
+            className="focus-ring w-full rounded-card bg-mint-500 py-3.5 text-[15px] font-semibold text-ink-950 transition active:scale-[0.98] disabled:opacity-60"
+          >
+            {isLoading ? 'Signing in…' : 'Sign in'}
+          </button>
+        </form>
+
+        <p className="mt-6 text-center text-[13px] text-white/40">
+          New here?{' '}
+          <Link to="/signup" className="font-semibold text-mint-400 hover:text-mint-300">
+            Create an account
+          </Link>
+        </p>
+
+        {/* Demo hint */}
+        <p className="mt-4 text-center text-[11px] text-white/20">
+          No account? Use any email + password to try the demo.
+        </p>
+      </div>
     </div>
   );
 }

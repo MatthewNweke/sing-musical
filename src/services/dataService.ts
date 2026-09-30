@@ -10,6 +10,7 @@ export interface DataService {
   signIn(email: string, password: string): Promise<UserProfile>;
   signUp(email: string, password: string, displayName: string): Promise<UserProfile>;
   signOut(): Promise<void>;
+  updateProfile(userId: string, patch: Partial<Pick<UserProfile, 'displayName' | 'bio'>>): Promise<UserProfile>;
 
   // Library
   getSongs(ownerId: string): Promise<Song[]>;
@@ -17,6 +18,8 @@ export interface DataService {
   createSong(partial: Pick<Song, 'title' | 'key' | 'bpm' | 'ownerId'>): Promise<Song>;
   updateTrack(songId: string, trackId: string, patch: Partial<MixTrack>): Promise<MixTrack>;
   deleteSong(songId: string): Promise<void>;
+  updateSongVisibility(songId: string, isPublic: boolean): Promise<void>;
+  renameSong(songId: string, title: string): Promise<void>;
 
   // Upload
   uploadAudioFile(file: File, songTitle: string, ownerId: string): Promise<Song>;

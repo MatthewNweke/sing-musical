@@ -7,7 +7,7 @@ import { mockUser, mockSongs, mockLiveSessions, fakeWaveform } from '@/data/mock
 // VITE_USE_SUPABASE=true — see services/index.ts.
 let songs: Song[] = JSON.parse(JSON.stringify(mockSongs));
 let liveSessions: LiveSession[] = JSON.parse(JSON.stringify(mockLiveSessions));
-let currentUser: UserProfile | null = mockUser; // pretend already signed in for demo
+let currentUser: UserProfile | null = null; // user must sign in
 
 const delay = (ms = 250) => new Promise((r) => setTimeout(r, ms));
 
@@ -39,6 +39,13 @@ export const mockDataService: DataService = {
   async signOut() {
     await delay(100);
     currentUser = null;
+  },
+
+  async updateProfile(_userId, patch) {
+    await delay(200);
+    if (!currentUser) throw new Error('Not signed in');
+    currentUser = { ...currentUser, ...patch };
+    return currentUser;
   },
 
   async getSongs(ownerId) {
@@ -99,6 +106,16 @@ export const mockDataService: DataService = {
   async deleteSong(songId) {
     await delay();
     songs = songs.filter((s) => s.id !== songId);
+  },
+
+  async updateSongVisibility(songId, isPublic) {
+    await delay(100);
+    songs = songs.map((s) => s.id === songId ? { ...s, isPublic } : s);
+  },
+
+  async renameSong(songId, title) {
+    await delay(100);
+    songs = songs.map((s) => s.id === songId ? { ...s, title } : s);
   },
 
   async uploadAudioFile(file, songTitle, ownerId) {

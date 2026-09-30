@@ -5,6 +5,7 @@ import { Card } from '@/components/ui/Card';
 import { Pill } from '@/components/ui/Pill';
 import { dataService } from '@/services';
 import { useSessionStore } from '@/state/sessionStore';
+import { useToast } from '@/components/ui/toastContext';
 import type { LiveSession } from '@/lib/types';
 
 export function GoLiveScreen() {
@@ -12,6 +13,7 @@ export function GoLiveScreen() {
   const [sessions, setSessions] = useState<LiveSession[]>([]);
   const [mySession, setMySession] = useState<LiveSession | null>(null);
   const [isStarting, setIsStarting] = useState(false);
+  const { toast } = useToast();
 
   useEffect(() => {
     void dataService.getLiveSessions().then(setSessions);
@@ -20,10 +22,16 @@ export function GoLiveScreen() {
   const goLive = async () => {
     if (!user) return;
     setIsStarting(true);
-    const session = await dataService.startLiveSession(user.id, `${user.displayName}'s session`);
-    setMySession(session);
-    setSessions((prev) => [session, ...prev]);
-    setIsStarting(false);
+    try {
+      const session = await dataService.startLiveSession(user.id, `${user.displayName}'s session`);
+      setMySession(session);
+      setSessions((prev) => [session, ...prev]);
+      toast("You're live!", 'success');
+    } catch {
+      toast('Could not start session.', 'error');
+    } finally {
+      setIsStarting(false);
+    }
   };
 
   const endLive = async () => {
@@ -31,6 +39,7 @@ export function GoLiveScreen() {
     await dataService.endLiveSession(mySession.id);
     setSessions((prev) => prev.filter((s) => s.id !== mySession.id));
     setMySession(null);
+    toast('Session ended.', 'info');
   };
 
   return (
@@ -52,9 +61,8 @@ export function GoLiveScreen() {
         <button
           onClick={mySession ? endLive : goLive}
           disabled={isStarting}
-          className={`focus-ring mt-2 w-full rounded-card py-3 text-[14px] font-semibold transition active:scale-[0.98] disabled:opacity-50 ${
-            mySession ? 'bg-white/10 text-white' : 'bg-mint-500 text-ink-950'
-          }`}
+          className={`focus-ring mt-2 w-full rounded-card py-3 text-[14px] font-semibold transition active:scale-[0.98] disabled:opacity-50 ${mySession ? 'bg-white/10 text-white' : 'bg-mint-500 text-ink-950'
+            }`}
         >
           {isStarting ? 'Starting…' : mySession ? 'End session' : 'Go live now'}
         </button>
@@ -77,8 +85,7 @@ export function GoLiveScreen() {
       </div>
 
       <p className="mt-6 text-center text-[11px] text-white/25">
-        Real-time audio streaming needs a WebRTC/media-server layer (e.g. LiveKit or Agora) — this view wires the
-        session lifecycle so that layer can be dropped in without UI changes.
+        Real-time audio streaming works once a WebRTC layer (e.g. LiveKit) is connected — this view handles the session lifecycle.
       </p>
     </div>
   );

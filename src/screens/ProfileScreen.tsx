@@ -1,25 +1,29 @@
 import { useNavigate } from 'react-router-dom';
-import { LogOut, Music2, Users } from 'lucide-react';
+import { Settings, Music2, Users } from 'lucide-react';
 import { Card } from '@/components/ui/Card';
 import { useSessionStore } from '@/state/sessionStore';
 import { isUsingRealBackend } from '@/services';
 
 export function ProfileScreen() {
   const navigate = useNavigate();
-  const { user, signOut } = useSessionStore();
+  const { user } = useSessionStore();
 
   if (!user) return null;
-
-  const handleSignOut = async () => {
-    await signOut();
-    navigate('/login');
-  };
 
   return (
     <div className="mx-auto w-full max-w-3xl px-6 py-10 md:px-10">
       <header className="mb-8 flex flex-col items-center text-center">
-        <div className="mb-3 flex h-20 w-20 items-center justify-center rounded-full bg-gradient-to-br from-mint-500 to-gold-400 text-[24px] font-bold text-ink-950">
-          {user.displayName.slice(0, 1).toUpperCase()}
+        <div className="relative mb-3">
+          <div className="flex h-20 w-20 items-center justify-center rounded-full bg-gradient-to-br from-mint-500 to-gold-400 text-[24px] font-bold text-ink-950">
+            {user.displayName.slice(0, 1).toUpperCase()}
+          </div>
+          <button
+            onClick={() => navigate('/settings')}
+            aria-label="Open settings"
+            className="focus-ring absolute -bottom-1 -right-1 flex h-7 w-7 items-center justify-center rounded-full border border-white/[0.1] bg-ink-800 text-white/60 hover:text-white/90"
+          >
+            <Settings size={13} />
+          </button>
         </div>
         <h1 className="text-[18px] font-bold">{user.displayName}</h1>
         <p className="text-[13px] text-white/40">{user.handle}</p>
@@ -52,10 +56,10 @@ export function ProfileScreen() {
       </Card>
 
       <button
-        onClick={handleSignOut}
+        onClick={() => navigate('/settings')}
         className="focus-ring flex w-full items-center justify-center gap-2 rounded-card border border-white/[0.08] py-3.5 text-[14px] font-semibold text-white/70 transition hover:bg-white/[0.04]"
       >
-        <LogOut size={16} /> Sign out
+        <Settings size={16} /> Edit profile & settings
       </button>
     </div>
   );

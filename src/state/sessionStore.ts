@@ -9,9 +9,10 @@ interface SessionState {
   signIn: (email: string, password: string) => Promise<void>;
   signUp: (email: string, password: string, displayName: string) => Promise<void>;
   signOut: () => Promise<void>;
+  updateProfile: (patch: Partial<Pick<UserProfile, 'displayName' | 'bio'>>) => Promise<void>;
 }
 
-export const useSessionStore = create<SessionState>((set) => ({
+export const useSessionStore = create<SessionState>((set, get) => ({
   user: null,
   isLoading: true,
 
@@ -34,5 +35,12 @@ export const useSessionStore = create<SessionState>((set) => ({
   signOut: async () => {
     await dataService.signOut();
     set({ user: null });
+  },
+
+  updateProfile: async (patch) => {
+    const current = get().user;
+    if (!current) return;
+    const updated = await dataService.updateProfile(current.id, patch);
+    set({ user: updated });
   },
 }));

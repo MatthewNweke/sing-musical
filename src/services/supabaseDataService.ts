@@ -105,6 +105,15 @@ export const supabaseDataService: DataService = {
     if (error) throw error;
   },
 
+  async updateProfile(userId, patch) {
+    const dbPatch: Record<string, unknown> = {};
+    if (patch.displayName !== undefined) dbPatch.display_name = patch.displayName;
+    if (patch.bio !== undefined) dbPatch.bio = patch.bio;
+    const { data, error } = await supabase.from('profiles').update(dbPatch).eq('id', userId).select().single();
+    if (error) throw error;
+    return mapProfile(data);
+  },
+
   async getSongs(ownerId) {
     const { data, error } = await supabase.from('songs').select(SONG_SELECT).eq('owner_id', ownerId);
     if (error) throw error;
@@ -140,6 +149,16 @@ export const supabaseDataService: DataService = {
 
   async deleteSong(songId) {
     const { error } = await supabase.from('songs').delete().eq('id', songId);
+    if (error) throw error;
+  },
+
+  async updateSongVisibility(songId, isPublic) {
+    const { error } = await supabase.from('songs').update({ is_public: isPublic }).eq('id', songId);
+    if (error) throw error;
+  },
+
+  async renameSong(songId, title) {
+    const { error } = await supabase.from('songs').update({ title }).eq('id', songId);
     if (error) throw error;
   },
 

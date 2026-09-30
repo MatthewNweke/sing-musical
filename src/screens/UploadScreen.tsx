@@ -5,6 +5,7 @@ import { TopBar } from '@/components/ui/TopBar';
 import { Card } from '@/components/ui/Card';
 import { dataService } from '@/services';
 import { useSessionStore } from '@/state/sessionStore';
+import { useToast } from '@/components/ui/toastContext';
 
 export function UploadScreen() {
   const navigate = useNavigate();
@@ -13,17 +14,24 @@ export function UploadScreen() {
   const [file, setFile] = useState<File | null>(null);
   const [isUploading, setIsUploading] = useState(false);
   const [isDragging, setIsDragging] = useState(false);
+  const { toast } = useToast();
 
   const handleFile = (f: File | null) => {
     if (f && f.type.startsWith('audio/')) setFile(f);
+    else if (f) toast('Please select an audio file (MP3, WAV, M4A).', 'error');
   };
 
   const handleUpload = async () => {
     if (!file || !user) return;
     setIsUploading(true);
-    const song = await dataService.uploadAudioFile(file, file.name.replace(/\.[^/.]+$/, ''), user.id);
-    setIsUploading(false);
-    navigate(`/mix/${song.id}`);
+    try {
+      const song = await dataService.uploadAudioFile(file, file.name.replace(/\.[^/.]+$/, ''), user.id);
+      toast('Track uploaded!', 'success');
+      navigate(`/mix/${song.id}`);
+    } catch {
+      toast('Upload failed. Try again.', 'error');
+      setIsUploading(false);
+    }
   };
 
   return (
@@ -38,9 +46,8 @@ export function UploadScreen() {
         onDragOver={(e) => { e.preventDefault(); setIsDragging(true); }}
         onDragLeave={() => setIsDragging(false)}
         onDrop={(e) => { e.preventDefault(); setIsDragging(false); handleFile(e.dataTransfer.files[0] ?? null); }}
-        className={`focus-ring mb-4 flex cursor-pointer flex-col items-center gap-3 rounded-card border-2 border-dashed p-10 text-center transition ${
-          isDragging ? 'border-mint-400 bg-mint-500/10' : 'border-white/[0.12] bg-white/[0.02]'
-        }`}
+        className={`focus-ring mb-4 flex cursor-pointer flex-col items-center gap-3 rounded-card border-2 border-dashed p-10 text-center transition ${isDragging ? 'border-mint-400 bg-mint-500/10' : 'border-white/[0.12] bg-white/[0.02]'
+          }`}
       >
         <input
           ref={inputRef}
