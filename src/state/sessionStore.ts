@@ -29,7 +29,8 @@ export const useSessionStore = create<SessionState>((set, get) => ({
 
   signUp: async (email, password, displayName) => {
     const user = await dataService.signUp(email, password, displayName);
-    set({ user });
+    // user is null when email confirmation is required — don't set session yet
+    if (user) set({ user });
   },
 
   signOut: async () => {

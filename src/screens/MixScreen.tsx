@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { MoreHorizontal, Play, Pause, Trash2, Globe, Lock } from 'lucide-react';
+import { MoreHorizontal, Play, Pause, Trash2, Globe, Lock, Loader2 } from 'lucide-react';
 import { TopBar } from '@/components/ui/TopBar';
 import { Pill } from '@/components/ui/Pill';
 import { Waveform } from '@/components/ui/Waveform';
@@ -9,6 +9,7 @@ import { Card } from '@/components/ui/Card';
 import { useMixerStore } from '@/state/mixerStore';
 import { dataService } from '@/services';
 import { useToast } from '@/components/ui/toastContext';
+import { useAudioPlayer } from '@/hooks/useAudioPlayer';
 import type { MixTrack } from '@/lib/types';
 
 const MIX_QUALITY_COPY: Record<string, { label: string; headline: string }> = {
@@ -49,18 +50,14 @@ function TrackStrip({ track }: { track: MixTrack }) {
               }`}
             aria-pressed={track.muted}
             aria-label={`Mute ${track.label}`}
-          >
-            M
-          </button>
+          >M</button>
           <button
             onClick={() => toggleSolo(track.id)}
             className={`focus-ring h-7 w-7 rounded-lg text-[11px] font-bold transition ${track.soloed ? 'bg-mint-400 text-ink-950' : 'bg-white/[0.06] text-white/50'
               }`}
             aria-pressed={track.soloed}
             aria-label={`Solo ${track.label}`}
-          >
-            S
-          </button>
+          >S</button>
         </div>
       </div>
 
@@ -88,24 +85,46 @@ function TrackStrip({ track }: { track: MixTrack }) {
   );
 }
 
+function formatTime(s: number): string {
+  const m = Math.floor(s / 60);
+  return `${String(m).padStart(2, '0')}:${String(Math.floor(s % 60)).padStart(2, '0')}`;
+}
+
 export function MixScreen() {
   const { songId } = useParams<{ songId: string }>();
   const navigate = useNavigate();
   const { song, isLoading, loadSong } = useMixerStore();
   const { toast } = useToast();
-  const [isPlaying, setIsPlaying] = useState(false);
+  const player = useAudioPlayer();
   const [showMenu, setShowMenu] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
   const [isTogglingPublic, setIsTogglingPublic] = useState(false);
+  const [isLoadingAudio, setIsLoadingAudio] = useState(false);
 
   useEffect(() => {
     if (songId) void loadSong(songId);
   }, [songId, loadSong]);
 
+  // Load the first track with real audio into the player
+  useEffect(() => {
+    if (!song) return;
+    const track = song.tracks.find((t) => t.storagePath);
+    if (!track?.storagePath) return;
+    setIsLoadingAudio(true);
+    dataService
+      .getAudioUrl(track.storagePath)
+      .then((url) => player.load(url))
+      .catch(() => { })
+      .finally(() => setIsLoadingAudio(false));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [song?.id]);
+
   const handlePlayPause = () => {
-    // Visual-only toggle — real audio playback requires stored audio blobs
-    setIsPlaying((p) => !p);
-    toast('Audio playback requires recorded audio files.', 'info');
+    if (!song?.tracks.some((t) => t.storagePath)) {
+      toast('No audio recorded yet — record or upload a take first.', 'info');
+      return;
+    }
+    player.toggle();
   };
 
   const handleDelete = async () => {
@@ -149,8 +168,7 @@ export function MixScreen() {
   }
 
   const quality = MIX_QUALITY_COPY[song.mixQuality] ?? MIX_QUALITY_COPY.needs_work;
-  const minutes = Math.floor(song.durationSeconds / 60);
-  const seconds = song.durationSeconds % 60;
+  const hasAudio = song.tracks.some((t) => t.storagePath);
 
   return (
     <div className="mx-auto w-full max-w-6xl px-6 pb-10 md:px-10">
@@ -162,11 +180,16 @@ export function MixScreen() {
             <Pill tone="mint">{quality.label}</Pill>
             <div className="flex items-center gap-2">
               <button
-                aria-label={isPlaying ? 'Pause mix' : 'Play mix'}
+                aria-label={player.isPlaying ? 'Pause mix' : 'Play mix'}
                 onClick={handlePlayPause}
-                className="focus-ring flex h-9 w-9 items-center justify-center rounded-full bg-white/[0.08] text-white transition hover:bg-white/[0.14]"
+                disabled={isLoadingAudio}
+                className="focus-ring flex h-9 w-9 items-center justify-center rounded-full bg-white/[0.08] text-white transition hover:bg-white/[0.14] disabled:opacity-50"
               >
-                {isPlaying ? <Pause size={16} /> : <Play size={16} />}
+                {isLoadingAudio
+                  ? <Loader2 size={16} className="animate-spin" />
+                  : player.isPlaying
+                    ? <Pause size={16} />
+                    : <Play size={16} />}
               </button>
               <div className="relative">
                 <button
@@ -191,49 +214,58 @@ export function MixScreen() {
                       disabled={isDeleting}
                       className="flex w-full items-center gap-2.5 px-4 py-3 text-[13px] text-red-400 transition hover:bg-white/[0.06] disabled:opacity-50"
                     >
-                      <Trash2 size={14} />
-                      Delete song
+                      <Trash2 size={14} /> Delete song
                     </button>
                   </div>
                 )}
               </div>
             </div>
           </div>
+
           <h2 className="mb-4 text-[22px] font-bold leading-snug">{quality.headline}</h2>
           <Waveform samples={song.masterWaveform} colorClassName="bg-mint-400" heightClassName="h-14" barWidth={2.5} gap={2} />
-          <div className="mt-2 flex items-center justify-between text-[11px] text-white/40">
-            <span>{String(minutes).padStart(2, '0')}:{String(seconds).padStart(2, '0')}</span>
-            <span>MASTER {song.masterLevelDb.toFixed(1)} dB</span>
-          </div>
+
+          {hasAudio && player.duration > 0 && (
+            <div className="mt-3">
+              <input
+                type="range"
+                min={0}
+                max={player.duration}
+                step={0.1}
+                value={player.currentTime}
+                onChange={(e) => player.seek(Number(e.target.value))}
+                className="w-full cursor-pointer"
+                style={{ accentColor: '#5fe3ac' }}
+                aria-label="Seek"
+              />
+              <div className="flex justify-between text-[11px] text-white/40">
+                <span>{formatTime(player.currentTime)}</span>
+                <span>{formatTime(player.duration)}</span>
+              </div>
+            </div>
+          )}
+
           <div className="mt-3 flex items-center justify-between">
             <Pill tone={song.isPublic ? 'mint' : 'neutral'}>
               {song.isPublic ? <><Globe size={10} /> Public</> : <><Lock size={10} /> Private</>}
             </Pill>
-            {song.plays > 0 && (
-              <span className="text-[11px] text-white/35">{song.plays} plays</span>
-            )}
+            {song.plays > 0 && <span className="text-[11px] text-white/35">{song.plays} plays</span>}
           </div>
         </Card>
 
         <div>
-          <div className="mb-3 flex items-center justify-between">
-            <div>
-              <p className="text-[11px] font-semibold uppercase tracking-wide text-white/35">
-                {song.tracks.length} TRACK{song.tracks.length === 1 ? '' : 'S'}
-              </p>
-              <p className="text-[16px] font-semibold text-white">Shape the balance</p>
-            </div>
+          <div className="mb-3">
+            <p className="text-[11px] font-semibold uppercase tracking-wide text-white/35">
+              {song.tracks.length} TRACK{song.tracks.length === 1 ? '' : 'S'}
+            </p>
+            <p className="text-[16px] font-semibold text-white">Shape the balance</p>
           </div>
-
           <div className="grid gap-3 md:grid-cols-2">
-            {song.tracks.map((track) => (
-              <TrackStrip key={track.id} track={track} />
-            ))}
+            {song.tracks.map((track) => <TrackStrip key={track.id} track={track} />)}
           </div>
         </div>
       </div>
 
-      {/* Dismiss menu on outside click */}
       {showMenu && (
         <div className="fixed inset-0 z-[5]" onClick={() => setShowMenu(false)} aria-hidden="true" />
       )}

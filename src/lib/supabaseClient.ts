@@ -1,13 +1,18 @@
 import { createClient } from '@supabase/supabase-js';
 
-const url = import.meta.env.VITE_SUPABASE_URL as string | undefined;
-const anonKey = import.meta.env.VITE_SUPABASE_ANON_KEY as string | undefined;
+const url = import.meta.env.VITE_SUPABASE_URL as string;
+const anonKey = import.meta.env.VITE_SUPABASE_ANON_KEY as string;
 
-export const isSupabaseConfigured = Boolean(url && anonKey);
+if (!url || !anonKey) {
+  throw new Error(
+    '[Sing Musically] Missing Supabase credentials.\n' +
+    'Create a .env.local file with:\n' +
+    '  VITE_SUPABASE_URL=https://your-project.supabase.co\n' +
+    '  VITE_SUPABASE_ANON_KEY=your-anon-key'
+  );
+}
 
-// Guarded so the app doesn't crash on import when running in pure-mock mode
-// without a .env file. supabaseDataService checks isSupabaseConfigured
-// before ever touching this client.
-export const supabase = isSupabaseConfigured
-  ? createClient(url as string, anonKey as string)
-  : (null as unknown as ReturnType<typeof createClient>);
+export const supabase = createClient(url, anonKey);
+
+// Always true — app cannot boot without credentials
+export const isSupabaseConfigured = true;

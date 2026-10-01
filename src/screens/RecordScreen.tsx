@@ -26,18 +26,14 @@ export function RecordScreen() {
   const user = useSessionStore((s) => s.user);
   const { toast } = useToast();
 
-  // Load recorded blob into player when available
   useEffect(() => {
     if (audioBlob) player.load(audioBlob);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [audioBlob]);
 
   const handleToggleRecord = async () => {
-    if (isRecording) {
-      stop();
-    } else {
-      await start();
-    }
+    if (isRecording) stop();
+    else await start();
   };
 
   const handleReset = () => {
@@ -46,19 +42,14 @@ export function RecordScreen() {
   };
 
   const handleFinish = async () => {
-    if (!user || elapsedMs === 0) return;
+    if (!user || elapsedMs === 0 || !audioBlob) return;
     setIsSaving(true);
     try {
-      const song = await dataService.createSong({
-        title: title.trim() || 'New Vocal',
-        key: 'A minor',
-        bpm: 84,
-        ownerId: user.id,
-      });
+      const song = await dataService.saveRecording(audioBlob, title.trim() || 'New Vocal', user.id);
       toast('Take saved!', 'success');
       navigate(`/mix/${song.id}`);
-    } catch {
-      toast('Could not save. Try again.', 'error');
+    } catch (err) {
+      toast(err instanceof Error ? err.message : 'Could not save. Try again.', 'error');
       setIsSaving(false);
     }
   };
@@ -70,7 +61,6 @@ export function RecordScreen() {
       <TopBar title="New Vocal" showBack />
 
       <div className="rounded-card border border-white/[0.06] bg-white/[0.03] p-6 md:p-8">
-        {/* Title input */}
         <input
           value={title}
           onChange={(e) => setTitle(e.target.value)}
@@ -81,9 +71,7 @@ export function RecordScreen() {
 
         <div className="mb-6 flex items-center justify-between">
           {permissionDenied ? (
-            <Pill tone="neutral">
-              <MicOff size={12} /> Mic blocked
-            </Pill>
+            <Pill tone="neutral"><MicOff size={12} /> Mic blocked</Pill>
           ) : (
             <Pill tone={isRecording ? 'mint' : 'neutral'}>
               {isRecording ? 'Recording…' : hasTake ? 'Take recorded' : 'Ready'}
@@ -93,9 +81,7 @@ export function RecordScreen() {
         </div>
 
         <div className="mb-6 text-center text-[40px] font-bold tabular-nums tracking-tight">
-          {hasTake && player.duration > 0
-            ? formatTime(player.currentTime * 1000)
-            : formatTime(elapsedMs)}
+          {hasTake && player.duration > 0 ? formatTime(player.currentTime * 1000) : formatTime(elapsedMs)}
         </div>
 
         <div className="mb-6">
@@ -106,12 +92,11 @@ export function RecordScreen() {
 
         {permissionDenied && (
           <p className="mt-4 rounded-xl border border-red-500/30 bg-red-500/10 px-4 py-3 text-center text-[13px] text-red-300">
-            Microphone access was denied. Please allow mic access in your browser settings and try again.
+            Mic access was denied. Allow microphone access in your browser settings and reload.
           </p>
         )}
 
         <div className="mt-8 flex items-center justify-center gap-8">
-          {/* Play/Pause playback */}
           <button
             aria-label={player.isPlaying ? 'Pause' : 'Play back recording'}
             disabled={!hasTake || !audioBlob}
@@ -121,7 +106,6 @@ export function RecordScreen() {
             {player.isPlaying ? <Pause size={18} /> : <Play size={18} />}
           </button>
 
-          {/* Record / Stop */}
           <button
             aria-label={isRecording ? 'Stop recording' : 'Start recording'}
             onClick={handleToggleRecord}
@@ -129,14 +113,11 @@ export function RecordScreen() {
             className={`focus-ring flex h-16 w-16 items-center justify-center rounded-full shadow-glow transition active:scale-95 disabled:opacity-40 ${isRecording ? 'bg-red-500' : 'bg-mint-500'
               }`}
           >
-            {isRecording ? (
-              <Square size={22} className="text-white" fill="currentColor" />
-            ) : (
-              <Mic size={26} className="text-ink-950" />
-            )}
+            {isRecording
+              ? <Square size={22} className="text-white" fill="currentColor" />
+              : <Mic size={26} className="text-ink-950" />}
           </button>
 
-          {/* Reset */}
           <button
             aria-label="Discard take"
             disabled={elapsedMs === 0 || isRecording}
@@ -149,20 +130,20 @@ export function RecordScreen() {
 
         <p className="mt-6 text-center text-[13px] text-white/35">
           {isRecording
-            ? 'Tap stop when you\'re happy with the take'
+            ? "Tap stop when you're happy with the take"
             : hasTake
-              ? 'Play it back, or save it to continue mixing'
+              ? 'Play it back, or save to continue mixing'
               : 'Tap the green button and sing naturally'}
         </p>
       </div>
 
-      {hasTake && (
+      {hasTake && audioBlob && (
         <button
           onClick={handleFinish}
           disabled={isSaving}
           className="focus-ring mt-4 w-full rounded-card bg-mint-500 py-3.5 text-[15px] font-semibold text-ink-950 transition active:scale-[0.98] disabled:opacity-60"
         >
-          {isSaving ? 'Saving…' : 'Save & go to Mix →'}
+          {isSaving ? 'Uploading & saving…' : 'Save & go to Mix →'}
         </button>
       )}
     </div>

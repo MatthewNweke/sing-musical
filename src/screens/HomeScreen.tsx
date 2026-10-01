@@ -3,9 +3,16 @@ import { Mic, Layers, Upload, Radio } from 'lucide-react';
 import { Pill } from '@/components/ui/Pill';
 import { ActionCard } from '@/components/ui/ActionCard';
 import { Waveform } from '@/components/ui/Waveform';
-import { fakeWaveform } from '@/data/mockData';
 
-const heroWaveform = fakeWaveform(48, 9);
+// Static decorative waveform — purely visual, not from any data source
+function makeHeroWaveform(length: number): number[] {
+  return Array.from({ length }, (_, i) => {
+    const t = i / length;
+    return Math.min(1, 0.35 + 0.3 * Math.abs(Math.sin(t * 14)) + 0.2 * Math.abs(Math.sin(t * 37)));
+  });
+}
+
+const heroWaveform = makeHeroWaveform(48);
 
 export function HomeScreen() {
   const navigate = useNavigate();
@@ -44,7 +51,13 @@ export function HomeScreen() {
 
         <div className="flex items-center justify-center rounded-card border border-white/[0.05] bg-white/[0.02] py-14">
           <div className="relative flex h-24 w-full max-w-sm items-center justify-center">
-            <Waveform samples={heroWaveform} colorClassName="bg-gradient-to-t from-mint-500 to-gold-400" heightClassName="h-24" barWidth={4} gap={4} />
+            <Waveform
+              samples={heroWaveform}
+              colorClassName="bg-gradient-to-t from-mint-500 to-gold-400"
+              heightClassName="h-24"
+              barWidth={4}
+              gap={4}
+            />
             <span className="absolute flex h-12 w-12 items-center justify-center rounded-full bg-ink-900 text-mint-400 shadow-glow">
               <Mic size={20} />
             </span>

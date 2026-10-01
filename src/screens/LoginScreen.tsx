@@ -1,7 +1,8 @@
 import { FormEvent, useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
-import { Eye, EyeOff, Mic } from 'lucide-react';
+import { Eye, EyeOff, Mic, MailCheck } from 'lucide-react';
 import { useSessionStore } from '@/state/sessionStore';
+import { dataService } from '@/services';
 
 export function LoginScreen() {
   const navigate = useNavigate();
@@ -11,25 +12,47 @@ export function LoginScreen() {
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
+  const [needsConfirmation, setNeedsConfirmation] = useState(false);
+  const [resent, setResent] = useState(false);
+  const [isResending, setIsResending] = useState(false);
 
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
     setError(null);
+    setNeedsConfirmation(false);
     setIsLoading(true);
     try {
       await signIn(email, password);
       navigate('/');
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Could not sign in. Check your credentials.');
+      const msg = err instanceof Error ? err.message : 'Could not sign in.';
+      // Supabase returns this exact message when email hasn't been confirmed
+      if (msg.toLowerCase().includes('email not confirmed')) {
+        setNeedsConfirmation(true);
+      } else {
+        setError(msg);
+      }
     } finally {
       setIsLoading(false);
+    }
+  };
+
+  const handleResend = async () => {
+    setIsResending(true);
+    try {
+      await dataService.resendConfirmation(email);
+      setResent(true);
+      setTimeout(() => setResent(false), 5000);
+    } catch {
+      // Supabase silently rate-limits resends
+    } finally {
+      setIsResending(false);
     }
   };
 
   return (
     <div className="flex min-h-screen flex-col items-center justify-center bg-ink-900 px-6">
       <div className="w-full max-w-sm">
-        {/* Logo */}
         <div className="mb-8 flex flex-col items-center gap-3">
           <span className="flex h-14 w-14 items-center justify-center rounded-2xl bg-gradient-to-br from-mint-500 to-gold-400 shadow-glow">
             <Mic size={26} className="text-ink-950" />
@@ -76,10 +99,31 @@ export function LoginScreen() {
             </div>
           </div>
 
+          {/* Standard error */}
           {error && (
             <p className="rounded-xl border border-red-500/20 bg-red-500/10 px-3 py-2 text-[13px] text-red-300">
               {error}
             </p>
+          )}
+
+          {/* Email not confirmed banner */}
+          {needsConfirmation && (
+            <div className="rounded-xl border border-gold-400/20 bg-gold-400/10 px-4 py-3 text-[13px]">
+              <div className="mb-2 flex items-center gap-2 font-semibold text-gold-300">
+                <MailCheck size={14} /> Email not confirmed
+              </div>
+              <p className="mb-3 text-white/60">
+                You need to confirm your email before signing in. Check your inbox for the link we sent.
+              </p>
+              <button
+                type="button"
+                onClick={handleResend}
+                disabled={isResending || resent}
+                className="text-[12px] font-semibold text-mint-400 hover:text-mint-300 disabled:opacity-50"
+              >
+                {resent ? 'Sent! Check your inbox.' : isResending ? 'Sending…' : 'Resend confirmation email →'}
+              </button>
+            </div>
           )}
 
           <button
@@ -96,11 +140,6 @@ export function LoginScreen() {
           <Link to="/signup" className="font-semibold text-mint-400 hover:text-mint-300">
             Create an account
           </Link>
-        </p>
-
-        {/* Demo hint */}
-        <p className="mt-4 text-center text-[11px] text-white/20">
-          No account? Use any email + password to try the demo.
         </p>
       </div>
     </div>

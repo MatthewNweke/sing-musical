@@ -1,5 +1,5 @@
-import { Home, Library, Mic, Upload, Radio, User, Compass, Settings } from 'lucide-react';
-import { NavLink } from 'react-router-dom';
+import { Home, Library, Mic, Upload, Radio, User, Compass, Settings, LogOut } from 'lucide-react';
+import { NavLink, useNavigate } from 'react-router-dom';
 import { useSessionStore } from '@/state/sessionStore';
 
 const NAV_ITEMS = [
@@ -13,9 +13,18 @@ const NAV_ITEMS = [
 
 export function SidebarContent({ onNavigate }: { onNavigate?: () => void }) {
   const user = useSessionStore((s) => s.user);
+  const signOut = useSessionStore((s) => s.signOut);
+  const navigate = useNavigate();
+
+  const handleSignOut = async () => {
+    onNavigate?.();
+    await signOut();
+    navigate('/login');
+  };
 
   return (
     <div className="flex h-full flex-col px-4 py-6">
+      {/* Logo */}
       <div className="mb-8 flex items-center gap-2 px-2">
         <span className="flex h-8 w-8 items-center justify-center rounded-xl bg-gradient-to-br from-mint-500 to-gold-400 text-ink-950">
           <Mic size={14} />
@@ -23,6 +32,7 @@ export function SidebarContent({ onNavigate }: { onNavigate?: () => void }) {
         <span className="text-[15px] font-semibold">Sing Musically</span>
       </div>
 
+      {/* Main nav */}
       <nav className="flex flex-1 flex-col gap-1" aria-label="Main navigation">
         {NAV_ITEMS.map(({ to, label, icon: Icon, end }) => (
           <NavLink
@@ -41,19 +51,8 @@ export function SidebarContent({ onNavigate }: { onNavigate?: () => void }) {
         ))}
       </nav>
 
+      {/* Bottom: Profile → Settings → Sign out */}
       <div className="flex flex-col gap-1 border-t border-white/[0.06] pt-3">
-        <NavLink
-          to="/settings"
-          onClick={onNavigate}
-          className={({ isActive }) =>
-            `focus-ring flex items-center gap-3 rounded-xl px-3 py-2.5 text-[14px] font-medium transition ${isActive ? 'bg-white/[0.08] text-white' : 'text-white/55 hover:bg-white/[0.05] hover:text-white/85'
-            }`
-          }
-        >
-          <Settings size={18} />
-          Settings
-        </NavLink>
-
         <NavLink
           to="/profile"
           onClick={onNavigate}
@@ -67,6 +66,26 @@ export function SidebarContent({ onNavigate }: { onNavigate?: () => void }) {
           </span>
           {user?.displayName ?? 'Profile'}
         </NavLink>
+
+        <NavLink
+          to="/settings"
+          onClick={onNavigate}
+          className={({ isActive }) =>
+            `focus-ring flex items-center gap-3 rounded-xl px-3 py-2.5 text-[14px] font-medium transition ${isActive ? 'bg-white/[0.08] text-white' : 'text-white/55 hover:bg-white/[0.05] hover:text-white/85'
+            }`
+          }
+        >
+          <Settings size={18} />
+          Settings
+        </NavLink>
+
+        <button
+          onClick={handleSignOut}
+          className="focus-ring flex items-center gap-3 rounded-xl px-3 py-2.5 text-[14px] font-medium text-white/55 transition hover:bg-red-500/10 hover:text-red-400"
+        >
+          <LogOut size={18} />
+          Sign out
+        </button>
       </div>
     </div>
   );

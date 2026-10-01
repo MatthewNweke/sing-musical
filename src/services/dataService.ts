@@ -1,16 +1,14 @@
 import type { Song, UserProfile, LiveSession, MixTrack } from '@/lib/types';
 
-// This interface is the seam between the UI and wherever data actually comes
-// from. Every screen imports `dataService` from `./index`, never the mock or
-// Supabase implementation directly. That means turning on real Supabase
-// (VITE_USE_SUPABASE=true in .env) requires touching zero screen code.
 export interface DataService {
   // Auth
   getCurrentUser(): Promise<UserProfile | null>;
   signIn(email: string, password: string): Promise<UserProfile>;
-  signUp(email: string, password: string, displayName: string): Promise<UserProfile>;
+  // Returns null when Supabase requires email confirmation (user not yet active)
+  signUp(email: string, password: string, displayName: string): Promise<UserProfile | null>;
   signOut(): Promise<void>;
   updateProfile(userId: string, patch: Partial<Pick<UserProfile, 'displayName' | 'bio'>>): Promise<UserProfile>;
+  resendConfirmation(email: string): Promise<void>;
 
   // Library
   getSongs(ownerId: string): Promise<Song[]>;
@@ -21,8 +19,10 @@ export interface DataService {
   updateSongVisibility(songId: string, isPublic: boolean): Promise<void>;
   renameSong(songId: string, title: string): Promise<void>;
 
-  // Upload
+  // Audio
   uploadAudioFile(file: File, songTitle: string, ownerId: string): Promise<Song>;
+  saveRecording(audioBlob: Blob, title: string, ownerId: string): Promise<Song>;
+  getAudioUrl(storagePath: string): Promise<string>;
 
   // Live
   getLiveSessions(): Promise<LiveSession[]>;

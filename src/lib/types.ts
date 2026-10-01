@@ -1,7 +1,3 @@
-// Central domain types. Both the mock service and the Supabase service
-// implement DataService using these exact shapes, so screens never know
-// or care which one is currently active.
-
 export interface UserProfile {
   id: string;
   displayName: string;
@@ -21,17 +17,18 @@ export interface MixTrack {
   label: string;
   sublabel: string;
   color: 'mint' | 'harmonyHigh' | 'harmonyLow' | 'gold';
-  volume: number; // 0-100
-  pan: number; // -50 (L) to 50 (R)
+  volume: number;   // 0-100
+  pan: number;      // -50 (L) to 50 (R)
   muted: boolean;
   soloed: boolean;
-  waveform: number[]; // normalized 0-1 amplitude samples for static rendering
+  waveform: number[];
+  storagePath?: string | null; // Supabase Storage path for real audio
 }
 
 export interface Song {
   id: string;
   title: string;
-  key: string; // e.g. "A minor"
+  key: string;
   bpm: number;
   durationSeconds: number;
   createdAt: string;
@@ -52,18 +49,4 @@ export interface LiveSession {
   isLive: boolean;
   listenerCount: number;
   startedAt: string | null;
-}
-
-export interface AuthSession {
-  userId: string;
-  email: string;
-}
-
-// Shape returned by the recording pipeline. In mock mode this is generated
-// by a timer + Math.sin noise; in real mode it will come from the Web Audio
-// API's AnalyserNode reading the MediaStream — same shape either way.
-export interface RecorderFrame {
-  elapsedMs: number;
-  inputLevel: number; // 0-1
-  waveformSample: number; // 0-1, most recent amplitude
 }

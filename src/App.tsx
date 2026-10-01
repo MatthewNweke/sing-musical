@@ -12,20 +12,23 @@ import { ExploreScreen } from '@/screens/ExploreScreen';
 import { SettingsScreen } from '@/screens/SettingsScreen';
 import { LoginScreen } from '@/screens/LoginScreen';
 import { SignupScreen } from '@/screens/SignupScreen';
+import { AuthConfirmScreen } from '@/screens/AuthConfirmScreen';
 import { useSessionStore } from '@/state/sessionStore';
 
 function RequireAuth({ children }: { children: React.ReactNode }) {
   const { user, isLoading } = useSessionStore();
+
   if (isLoading) {
     return (
       <div className="flex min-h-screen items-center justify-center">
-        <div className="flex flex-col items-center gap-3 text-white/30">
+        <div className="flex flex-col items-center gap-3">
           <div className="h-8 w-8 animate-spin rounded-full border-2 border-white/10 border-t-mint-400" />
-          <span className="text-[13px]">Loading…</span>
+          <span className="text-[13px] text-white/30">Loading…</span>
         </div>
       </div>
     );
   }
+
   if (!user) return <Navigate to="/login" replace />;
   return <>{children}</>;
 }
@@ -41,6 +44,7 @@ export default function App() {
     <Routes>
       <Route path="/login" element={<LoginScreen />} />
       <Route path="/signup" element={<SignupScreen />} />
+      <Route path="/auth/confirm" element={<AuthConfirmScreen />} />
 
       <Route
         path="/*"
