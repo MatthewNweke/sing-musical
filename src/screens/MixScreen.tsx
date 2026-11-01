@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { MoreHorizontal, Play, Pause, Trash2, Globe, Lock, Loader2 } from 'lucide-react';
+import { MoreHorizontal, Play, Pause, Trash2, Globe, Lock, Loader2, Download, Sparkles } from 'lucide-react';
 import { TopBar } from '@/components/ui/TopBar';
 import { Pill } from '@/components/ui/Pill';
 import { Waveform } from '@/components/ui/Waveform';
@@ -208,6 +208,18 @@ export function MixScreen() {
                     >
                       {song.isPublic ? <Lock size={14} /> : <Globe size={14} />}
                       {song.isPublic ? 'Make private' : 'Make public'}
+                    </button>
+                    <button
+                      onClick={() => navigate(`/export/${song.id}`)}
+                      className="flex w-full items-center gap-2.5 px-4 py-3 text-[13px] text-white/80 transition hover:bg-white/[0.06]"
+                    >
+                      <Download size={14} /> Export / Download
+                    </button>
+                    <button
+                      onClick={() => navigate(`/genre-picker?from=record`)}
+                      className="flex w-full items-center gap-2.5 px-4 py-3 text-[13px] text-white/80 transition hover:bg-white/[0.06]"
+                    >
+                      <Sparkles size={14} /> Get arrangement
                     </button>
                     <button
                       onClick={handleDelete}

@@ -13,6 +13,12 @@ import { SettingsScreen } from '@/screens/SettingsScreen';
 import { LoginScreen } from '@/screens/LoginScreen';
 import { SignupScreen } from '@/screens/SignupScreen';
 import { AuthConfirmScreen } from '@/screens/AuthConfirmScreen';
+import { GenrePickerScreen } from '@/screens/GenrePickerScreen';
+import { SuggestionScreen } from '@/screens/SuggestionScreen';
+import { InstrumentEditorScreen } from '@/screens/InstrumentEditorScreen';
+import { LiveModeScreen } from '@/screens/LiveModeScreen';
+import { SubscriptionScreen } from '@/screens/SubscriptionScreen';
+import { ExportScreen } from '@/screens/ExportScreen';
 import { useSessionStore } from '@/state/sessionStore';
 
 function RequireAuth({ children }: { children: React.ReactNode }) {
@@ -42,10 +48,12 @@ export default function App() {
 
   return (
     <Routes>
+      {/* Public auth routes */}
       <Route path="/login" element={<LoginScreen />} />
       <Route path="/signup" element={<SignupScreen />} />
       <Route path="/auth/confirm" element={<AuthConfirmScreen />} />
 
+      {/* Protected app routes */}
       <Route
         path="/*"
         element={
@@ -53,14 +61,33 @@ export default function App() {
             <AppShell>
               <Routes>
                 <Route path="/" element={<HomeScreen />} />
+
+                {/* Library & social */}
                 <Route path="/library" element={<LibraryScreen />} />
                 <Route path="/explore" element={<ExploreScreen />} />
+
+                {/* Recording flow */}
+                <Route path="/record" element={<RecordScreen />} />
+                <Route path="/genre-picker" element={<GenrePickerScreen />} />
+                <Route path="/suggestion" element={<SuggestionScreen />} />
+                <Route path="/instrument-editor" element={<InstrumentEditorScreen />} />
+
+                {/* Mix & export */}
+                <Route path="/mix/:songId" element={<MixScreen />} />
+                <Route path="/export/:songId" element={<ExportScreen />} />
+
+                {/* Upload */}
+                <Route path="/upload" element={<UploadScreen />} />
+
+                {/* Live */}
+                <Route path="/live" element={<GoLiveScreen />} />
+                <Route path="/live/mode" element={<LiveModeScreen />} />
+
+                {/* Account */}
                 <Route path="/profile" element={<ProfileScreen />} />
                 <Route path="/settings" element={<SettingsScreen />} />
-                <Route path="/record" element={<RecordScreen />} />
-                <Route path="/mix/:songId" element={<MixScreen />} />
-                <Route path="/upload" element={<UploadScreen />} />
-                <Route path="/live" element={<GoLiveScreen />} />
+                <Route path="/subscription" element={<SubscriptionScreen />} />
+
                 <Route path="*" element={<Navigate to="/" replace />} />
               </Routes>
             </AppShell>

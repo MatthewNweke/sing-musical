@@ -1,5 +1,5 @@
 import { useNavigate } from 'react-router-dom';
-import { Mic, Layers, Upload, Radio } from 'lucide-react';
+import { Mic, Layers, Upload, Radio, Sparkles, CreditCard } from 'lucide-react';
 import { Pill } from '@/components/ui/Pill';
 import { ActionCard } from '@/components/ui/ActionCard';
 import { Waveform } from '@/components/ui/Waveform';
@@ -67,9 +67,11 @@ export function HomeScreen() {
 
       <div className="mt-12 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
         <ActionCard icon={Mic} title="Sing & add" subtitle="Start with your voice" tone="filled" onClick={() => navigate('/record')} />
-        <ActionCard icon={Layers} title="Mix vocals" subtitle="Blend your harmonies" onClick={() => navigate('/library')} />
+        <ActionCard icon={Sparkles} title="Pick a genre" subtitle="Get AI arrangement" onClick={() => navigate('/genre-picker?from=record')} />
         <ActionCard icon={Upload} title="Upload a song" subtitle="Reimagine any track" onClick={() => navigate('/upload')} />
         <ActionCard icon={Radio} title="Go live" subtitle="Your band, on stage" onClick={() => navigate('/live')} />
+        <ActionCard icon={Layers} title="Mix vocals" subtitle="Blend your harmonies" onClick={() => navigate('/library')} />
+        <ActionCard icon={CreditCard} title="Subscription" subtitle="Unlock all features" onClick={() => navigate('/subscription')} />
       </div>
     </div>
   );

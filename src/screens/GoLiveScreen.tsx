@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
-import { Radio, Users } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
+import { Radio, Users, Music2, Mic } from 'lucide-react';
 import { TopBar } from '@/components/ui/TopBar';
 import { Card } from '@/components/ui/Card';
 import { Pill } from '@/components/ui/Pill';
@@ -9,6 +10,7 @@ import { useToast } from '@/components/ui/toastContext';
 import type { LiveSession } from '@/lib/types';
 
 export function GoLiveScreen() {
+  const navigate = useNavigate();
   const user = useSessionStore((s) => s.user);
   const [sessions, setSessions] = useState<LiveSession[]>([]);
   const [mySession, setMySession] = useState<LiveSession | null>(null);
@@ -46,17 +48,42 @@ export function GoLiveScreen() {
     <div className="mx-auto w-full max-w-2xl px-6 py-4 md:px-10">
       <TopBar title="Go live" showBack />
 
+      {/* Live Mode entry */}
+      <div className="mb-6 grid gap-3 sm:grid-cols-2">
+        <button
+          onClick={() => navigate('/live/mode')}
+          className="focus-ring flex items-center gap-3 rounded-card border border-mint-500/20 bg-mint-500/10 p-4 text-left transition hover:border-mint-500/40 active:scale-[0.98]"
+        >
+          <Music2 size={20} className="shrink-0 text-mint-400" />
+          <div>
+            <p className="text-[14px] font-semibold text-white">Live Mode</p>
+            <p className="text-[12px] text-white/50">Metronome or free-sing with backing</p>
+          </div>
+        </button>
+        <button
+          onClick={() => navigate('/genre-picker?from=live')}
+          className="focus-ring flex items-center gap-3 rounded-card border border-gold-400/20 bg-gold-400/10 p-4 text-left transition hover:border-gold-400/40 active:scale-[0.98]"
+        >
+          <Mic size={20} className="shrink-0 text-gold-400" />
+          <div>
+            <p className="text-[14px] font-semibold text-white">Pick a genre first</p>
+            <p className="text-[12px] text-white/50">Choose sound → live with accompaniment</p>
+          </div>
+        </button>
+      </div>
+
+      {/* Broadcast session */}
       <Card className="mb-6 flex flex-col items-center gap-3 p-6 text-center">
         <span className={`flex h-14 w-14 items-center justify-center rounded-full ${mySession ? 'bg-red-500' : 'bg-mint-500'}`}>
           <Radio className={mySession ? 'text-white' : 'text-ink-950'} size={24} />
         </span>
         <p className="text-[16px] font-semibold text-white">
-          {mySession ? "You're live" : 'Your band, on stage'}
+          {mySession ? "You're broadcasting" : 'Broadcast a session'}
         </p>
         <p className="text-[13px] text-white/40">
           {mySession
             ? `${mySession.listenerCount} listening right now`
-            : 'Broadcast a take in real time and let people drop in.'}
+            : "Create a public session so others can see you're live."}
         </p>
         <button
           onClick={mySession ? endLive : goLive}
@@ -81,12 +108,10 @@ export function GoLiveScreen() {
             <Pill tone="mint">Live</Pill>
           </Card>
         ))}
-        {sessions.length === 0 && <p className="text-center text-[13px] text-white/30">No one's live right now.</p>}
+        {sessions.length === 0 && (
+          <p className="text-center text-[13px] text-white/30">No one's broadcasting right now.</p>
+        )}
       </div>
-
-      <p className="mt-6 text-center text-[11px] text-white/25">
-        Real-time audio streaming works once a WebRTC layer (e.g. LiveKit) is connected — this view handles the session lifecycle.
-      </p>
     </div>
   );
 }

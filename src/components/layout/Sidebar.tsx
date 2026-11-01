@@ -1,4 +1,4 @@
-import { Home, Library, Mic, Upload, Radio, User, Compass, Settings, LogOut } from 'lucide-react';
+import { Home, Library, Mic, Upload, Radio, User, Compass, Settings, LogOut, CreditCard } from 'lucide-react';
 import { NavLink, useNavigate } from 'react-router-dom';
 import { useSessionStore } from '@/state/sessionStore';
 
@@ -51,7 +51,7 @@ export function SidebarContent({ onNavigate }: { onNavigate?: () => void }) {
         ))}
       </nav>
 
-      {/* Bottom: Profile → Settings → Sign out */}
+      {/* Bottom: Profile → Settings → Subscription → Sign out */}
       <div className="flex flex-col gap-1 border-t border-white/[0.06] pt-3">
         <NavLink
           to="/profile"
@@ -77,6 +77,18 @@ export function SidebarContent({ onNavigate }: { onNavigate?: () => void }) {
         >
           <Settings size={18} />
           Settings
+        </NavLink>
+
+        <NavLink
+          to="/subscription"
+          onClick={onNavigate}
+          className={({ isActive }) =>
+            `focus-ring flex items-center gap-3 rounded-xl px-3 py-2.5 text-[14px] font-medium transition ${isActive ? 'bg-gold-400/20 text-gold-300' : 'text-white/55 hover:bg-white/[0.05] hover:text-white/85'
+            }`
+          }
+        >
+          <CreditCard size={18} />
+          Subscription
         </NavLink>
 
         <button

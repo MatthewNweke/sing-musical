@@ -8,9 +8,15 @@ const toneClasses: Record<PillTone, string> = {
   neutral: 'bg-white/[0.06] text-white/70',
 };
 
-export function Pill({ tone = 'neutral', children }: PropsWithChildren<{ tone?: PillTone }>) {
+export function Pill({
+  tone = 'neutral',
+  className = '',
+  children,
+}: PropsWithChildren<{ tone?: PillTone; className?: string }>) {
   return (
-    <span className={`inline-flex items-center gap-1.5 rounded-pill px-3 py-1 text-xs font-semibold ${toneClasses[tone]}`}>
+    <span
+      className={`inline-flex items-center gap-1.5 rounded-pill px-3 py-1 text-xs font-semibold ${toneClasses[tone]} ${className}`}
+    >
       {children}
     </span>
   );

@@ -1,6 +1,6 @@
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useState, useEffect } from 'react';
-import { Mic, Play, Pause, Square, RotateCcw, MicOff } from 'lucide-react';
+import { Mic, Play, Pause, Square, RotateCcw, MicOff, Sparkles } from 'lucide-react';
 import { TopBar } from '@/components/ui/TopBar';
 import { Pill } from '@/components/ui/Pill';
 import { Waveform } from '@/components/ui/Waveform';
@@ -10,6 +10,8 @@ import { useAudioPlayer } from '@/hooks/useAudioPlayer';
 import { dataService } from '@/services';
 import { useSessionStore } from '@/state/sessionStore';
 import { useToast } from '@/components/ui/toastContext';
+import { GENRE_MAP } from '@/lib/genres';
+import type { GenreId } from '@/lib/types';
 
 function formatTime(ms: number) {
   const s = Math.floor(ms / 1000);
@@ -19,6 +21,10 @@ function formatTime(ms: number) {
 
 export function RecordScreen() {
   const navigate = useNavigate();
+  const [params] = useSearchParams();
+  const genreId = params.get('genre') as GenreId | null;
+  const genre = genreId ? GENRE_MAP.get(genreId) : null;
+
   const { isRecording, elapsedMs, inputLevel, waveform, audioBlob, start, stop, reset, permissionDenied } = useRecorder();
   const player = useAudioPlayer();
   const [isSaving, setIsSaving] = useState(false);
@@ -47,7 +53,12 @@ export function RecordScreen() {
     try {
       const song = await dataService.saveRecording(audioBlob, title.trim() || 'New Vocal', user.id);
       toast('Take saved!', 'success');
-      navigate(`/mix/${song.id}`);
+      if (genreId) {
+        // Go to suggestion screen with the new song
+        navigate(`/suggestion?genre=${genreId}&songId=${song.id}`);
+      } else {
+        navigate(`/mix/${song.id}`);
+      }
     } catch (err) {
       toast(err instanceof Error ? err.message : 'Could not save. Try again.', 'error');
       setIsSaving(false);
@@ -58,7 +69,18 @@ export function RecordScreen() {
 
   return (
     <div className="mx-auto w-full max-w-2xl px-6 py-4 md:px-10">
-      <TopBar title="New Vocal" showBack />
+      <TopBar
+        title="New Vocal"
+        showBack
+        right={
+          <button
+            onClick={() => navigate(`/genre-picker?from=record`)}
+            className="focus-ring flex items-center gap-1.5 rounded-xl border border-white/[0.08] px-3 py-1.5 text-[12px] font-medium text-white/60 transition hover:bg-white/[0.05]"
+          >
+            {genre ? <>{genre.emoji} {genre.label}</> : <><Sparkles size={12} /> Pick genre</>}
+          </button>
+        }
+      />
 
       <div className="rounded-card border border-white/[0.06] bg-white/[0.03] p-6 md:p-8">
         <input
@@ -77,7 +99,9 @@ export function RecordScreen() {
               {isRecording ? 'Recording…' : hasTake ? 'Take recorded' : 'Ready'}
             </Pill>
           )}
-          <span className="text-xs text-white/40">A minor · 84 BPM</span>
+          {genre && (
+            <span className="text-xs text-white/40">{genre.emoji} {genre.label} · {genre.defaultBpm} BPM</span>
+          )}
         </div>
 
         <div className="mb-6 text-center text-[40px] font-bold tabular-nums tracking-tight">
@@ -132,7 +156,7 @@ export function RecordScreen() {
           {isRecording
             ? "Tap stop when you're happy with the take"
             : hasTake
-              ? 'Play it back, or save to continue mixing'
+              ? 'Play it back, or save to continue'
               : 'Tap the green button and sing naturally'}
         </p>
       </div>
@@ -143,7 +167,11 @@ export function RecordScreen() {
           disabled={isSaving}
           className="focus-ring mt-4 w-full rounded-card bg-mint-500 py-3.5 text-[15px] font-semibold text-ink-950 transition active:scale-[0.98] disabled:opacity-60"
         >
-          {isSaving ? 'Uploading & saving…' : 'Save & go to Mix →'}
+          {isSaving
+            ? 'Uploading & saving…'
+            : genreId
+              ? `Save & get ${genre?.label ?? ''} arrangement →`
+              : 'Save & go to Mix →'}
         </button>
       )}
     </div>
