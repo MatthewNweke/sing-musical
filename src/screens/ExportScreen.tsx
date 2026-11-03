@@ -54,7 +54,12 @@ export function ExportScreen() {
             const a = document.createElement('a');
             a.href = url;
             a.download = `${song?.title ?? 'recording'}.${format}`;
+            a.target = '_blank';
+            a.rel = 'noopener noreferrer';
+            document.body.appendChild(a);
             a.click();
+            document.body.removeChild(a);
+            toast('Download started!', 'success');
         } catch {
             toast('Could not prepare download.', 'error');
         }
@@ -113,11 +118,11 @@ export function ExportScreen() {
                         <div className="mt-4 flex justify-center">
                             <button
                                 onClick={player.toggle}
-                                disabled={isLoadingAudio || !song.tracks.some((t) => t.storagePath)}
+                                disabled={isLoadingAudio || !song.tracks.some((t) => t.storagePath) || (!player.isReady && !player.isPlaying)}
                                 className="focus-ring flex h-12 w-12 items-center justify-center rounded-full bg-mint-500 text-ink-950 shadow-glow transition active:scale-95 disabled:opacity-40"
                                 aria-label={player.isPlaying ? 'Pause' : 'Play'}
                             >
-                                {isLoadingAudio
+                                {isLoadingAudio || (!player.isReady && song.tracks.some((t) => t.storagePath))
                                     ? <Loader2 size={18} className="animate-spin" />
                                     : player.isPlaying
                                         ? <Pause size={18} />
@@ -135,8 +140,8 @@ export function ExportScreen() {
                                     key={f}
                                     onClick={() => setFormat(f)}
                                     className={`focus-ring flex-1 rounded-xl border py-2.5 text-[13px] font-semibold uppercase transition ${format === f
-                                            ? 'border-mint-400 bg-mint-500/15 text-mint-300'
-                                            : 'border-white/[0.08] text-white/50 hover:border-white/20'
+                                        ? 'border-mint-400 bg-mint-500/15 text-mint-300'
+                                        : 'border-white/[0.08] text-white/50 hover:border-white/20'
                                         }`}
                                 >
                                     {f}

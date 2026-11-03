@@ -200,35 +200,45 @@ export function MixScreen() {
                   <MoreHorizontal size={16} />
                 </button>
                 {showMenu && (
-                  <div className="absolute right-0 top-10 z-10 w-48 overflow-hidden rounded-2xl border border-white/[0.08] bg-ink-800 shadow-xl">
-                    <button
-                      onClick={handleTogglePublic}
-                      disabled={isTogglingPublic}
-                      className="flex w-full items-center gap-2.5 px-4 py-3 text-[13px] text-white/80 transition hover:bg-white/[0.06] disabled:opacity-50"
+                  <>
+                    <div
+                      className="fixed inset-0 z-[9]"
+                      onClick={() => setShowMenu(false)}
+                      aria-hidden="true"
+                    />
+                    <div
+                      className="absolute right-0 top-10 z-[10] w-52 overflow-hidden rounded-2xl border border-white/[0.08] bg-ink-800 shadow-xl"
+                      onClick={(e) => e.stopPropagation()}
                     >
-                      {song.isPublic ? <Lock size={14} /> : <Globe size={14} />}
-                      {song.isPublic ? 'Make private' : 'Make public'}
-                    </button>
-                    <button
-                      onClick={() => navigate(`/export/${song.id}`)}
-                      className="flex w-full items-center gap-2.5 px-4 py-3 text-[13px] text-white/80 transition hover:bg-white/[0.06]"
-                    >
-                      <Download size={14} /> Export / Download
-                    </button>
-                    <button
-                      onClick={() => navigate(`/genre-picker?from=record`)}
-                      className="flex w-full items-center gap-2.5 px-4 py-3 text-[13px] text-white/80 transition hover:bg-white/[0.06]"
-                    >
-                      <Sparkles size={14} /> Get arrangement
-                    </button>
-                    <button
-                      onClick={handleDelete}
-                      disabled={isDeleting}
-                      className="flex w-full items-center gap-2.5 px-4 py-3 text-[13px] text-red-400 transition hover:bg-white/[0.06] disabled:opacity-50"
-                    >
-                      <Trash2 size={14} /> Delete song
-                    </button>
-                  </div>
+                      <button
+                        onClick={() => { setShowMenu(false); handleTogglePublic(); }}
+                        disabled={isTogglingPublic}
+                        className="flex w-full items-center gap-2.5 px-4 py-3 text-[13px] text-white/80 transition hover:bg-white/[0.06] disabled:opacity-50"
+                      >
+                        {song.isPublic ? <Lock size={14} /> : <Globe size={14} />}
+                        {song.isPublic ? 'Make private' : 'Make public'}
+                      </button>
+                      <button
+                        onClick={() => { setShowMenu(false); navigate(`/export/${song.id}`); }}
+                        className="flex w-full items-center gap-2.5 px-4 py-3 text-[13px] text-white/80 transition hover:bg-white/[0.06]"
+                      >
+                        <Download size={14} /> Export / Download
+                      </button>
+                      <button
+                        onClick={() => { setShowMenu(false); navigate(`/suggestion?genre=pop&songId=${song.id}`); }}
+                        className="flex w-full items-center gap-2.5 px-4 py-3 text-[13px] text-white/80 transition hover:bg-white/[0.06]"
+                      >
+                        <Sparkles size={14} /> Get arrangement
+                      </button>
+                      <button
+                        onClick={() => { setShowMenu(false); void handleDelete(); }}
+                        disabled={isDeleting}
+                        className="flex w-full items-center gap-2.5 px-4 py-3 text-[13px] text-red-400 transition hover:bg-white/[0.06] disabled:opacity-50"
+                      >
+                        <Trash2 size={14} /> Delete song
+                      </button>
+                    </div>
+                  </>
                 )}
               </div>
             </div>
@@ -277,10 +287,6 @@ export function MixScreen() {
           </div>
         </div>
       </div>
-
-      {showMenu && (
-        <div className="fixed inset-0 z-[5]" onClick={() => setShowMenu(false)} aria-hidden="true" />
-      )}
     </div>
   );
 }

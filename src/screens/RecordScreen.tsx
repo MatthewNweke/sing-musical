@@ -1,6 +1,6 @@
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useState, useEffect } from 'react';
-import { Mic, Play, Pause, Square, RotateCcw, MicOff, Sparkles } from 'lucide-react';
+import { Mic, Play, Pause, Square, RotateCcw, MicOff, Sparkles, Loader2 } from 'lucide-react';
 import { TopBar } from '@/components/ui/TopBar';
 import { Pill } from '@/components/ui/Pill';
 import { Waveform } from '@/components/ui/Waveform';
@@ -123,11 +123,11 @@ export function RecordScreen() {
         <div className="mt-8 flex items-center justify-center gap-8">
           <button
             aria-label={player.isPlaying ? 'Pause' : 'Play back recording'}
-            disabled={!hasTake || !audioBlob}
+            disabled={!hasTake || !audioBlob || !player.isReady}
             onClick={player.toggle}
             className="focus-ring flex h-11 w-11 items-center justify-center rounded-full text-white/60 transition hover:bg-white/[0.06] disabled:opacity-30"
           >
-            {player.isPlaying ? <Pause size={18} /> : <Play size={18} />}
+            {player.isPlaying ? <Pause size={18} /> : hasTake && audioBlob && !player.isReady ? <Loader2 size={18} className="animate-spin" /> : <Play size={18} />}
           </button>
 
           <button
