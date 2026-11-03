@@ -1,7 +1,6 @@
 import { useState } from 'react';
 import { Check, Zap, Crown, Music2 } from 'lucide-react';
 import { TopBar } from '@/components/ui/TopBar';
-import { Card } from '@/components/ui/Card';
 import type { Plan, PlanId } from '@/lib/types';
 
 const PLANS: Plan[] = [
@@ -71,18 +70,21 @@ const PLAN_COLORS: Record<PlanId, string> = {
 
 export function SubscriptionScreen() {
     const [selected, setSelected] = useState<PlanId>('creator');
-    const currentPlan: PlanId = 'free'; // In a real app, fetch from user profile
+    // In a real app this comes from the user's profile / Stripe subscription status
+    const currentPlan = 'free' as PlanId;
 
     const handleSubscribe = (planId: PlanId) => {
         if (planId === 'free') return;
-        // Stripe / payment integration goes here
         alert(`Payment integration coming soon! You selected: ${planId}`);
     };
+
+    const isCurrentPlan = selected === currentPlan;
+    const canSubscribe = selected !== 'free' && !isCurrentPlan;
 
     return (
         <div className="mx-auto w-full max-w-4xl px-6 py-4 md:px-10">
             <TopBar title="Choose a plan" showBack />
-            <p className="mb-8 text-[14px] text-white/50 text-center">
+            <p className="mb-8 text-center text-[14px] text-white/50">
                 Unlock the full Sing Musically experience.
             </p>
 
@@ -109,7 +111,7 @@ export function SubscriptionScreen() {
                         <div className={`mb-3 flex items-center gap-2 ${PLAN_COLORS[plan.id]}`}>
                             {PLAN_ICONS[plan.id]}
                             <span className="text-[15px] font-bold">{plan.name}</span>
-                            {currentPlan === plan.id && (
+                            {plan.id === currentPlan && (
                                 <span className="ml-auto rounded-pill bg-white/10 px-2 py-0.5 text-[10px] text-white/50">
                                     Current
                                 </span>
@@ -135,15 +137,15 @@ export function SubscriptionScreen() {
             </div>
 
             <div className="mt-6">
-                {selected !== 'free' && selected !== currentPlan ? (
+                {canSubscribe ? (
                     <button
                         onClick={() => handleSubscribe(selected)}
                         className="focus-ring w-full rounded-card bg-mint-500 py-3.5 text-[15px] font-semibold text-ink-950 transition active:scale-[0.98]"
                     >
                         Get {PLANS.find((p) => p.id === selected)?.name} →
                     </button>
-                ) : selected === currentPlan ? (
-                    <p className="text-center text-[13px] text-white/40">You're already on this plan.</p>
+                ) : isCurrentPlan ? (
+                    <p className="text-center text-[13px] text-white/40">You&apos;re already on this plan.</p>
                 ) : null}
                 <p className="mt-3 text-center text-[11px] text-white/25">
                     Cancel anytime. No hidden fees.
